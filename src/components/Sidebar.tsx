@@ -382,15 +382,14 @@ export function Sidebar() {
         {/* Only macOS needs the extra 28px for overlaid window controls. */}
         <div className={cn("shrink-0", IS_MACOS ? "h-[38px]" : "h-2.5")} />
         {/* App logo — follows the platform's title-bar spacing. */}
-        <div className="flex items-center px-3 gap-3 pb-2.5 shrink-0">
+        <div className="shrink-0 px-3 pb-3">
           <img
-            src="/icons/32x32.png"
-            alt="logo"
-            className="w-[24px] h-[24px] shrink-0"
+            src="/icons/gusen-wordmark.png"
+            alt="GuthonPaaS"
+            width={498}
+            height={80}
+            className="h-auto w-[136px] dark:rounded-md dark:bg-white dark:p-1"
           />
-          <span className="text-[17px] font-semibold text-secondary tracking-tight truncate leading-[22px]">
-            {t("app.name")}
-          </span>
         </div>
 
         {/* Nav */}

@@ -1,6 +1,6 @@
 # Skills Manager 中文使用指南
 
-Skills Manager 把各个 Agent 的 Skills 集中到一个技能库。你可以从本地、Git 仓库或技能市场导入 Skill，再部署给 Codex、Claude Code、Cursor 等 Agent，也可以只部署到指定项目。
+Skills Manager 把各个 Agent 的 Skills 集中到一个技能库。你可以从本地、Git 仓库或内置的谷神技能来源导入 Skill，再部署给 Codex、Claude Code、Cursor 等 Agent，也可以只部署到指定项目。
 
 [安装应用](#安装应用) · [导入技能](#导入技能) · [部署到全局工作区](#部署到全局工作区) · [部署到指定项目](#部署到指定项目) · [批量使用 Preset](#批量使用-preset) · [备份与恢复](#备份与恢复)
 
@@ -23,7 +23,7 @@ Skills Manager 把各个 Agent 的 Skills 集中到一个技能库。你可以�
 | 本地文件夹 | 选 **本地安装 → 选择文件夹**，打开直接包含 `SKILL.md` 的目录。一个父目录下有多个 Skill 时，可用 **从文件夹批量导入**。 |
 | 压缩包 | 选 **本地安装 → 选择压缩包或单文件**，导入 `.zip` 或 `.skill`。 |
 | Git 仓库 | 选 **Git 安装**，粘贴仓库地址，点 **克隆并预览**。勾选所需技能，再点 **导入选中项**。 |
-| 技能市场 | 在 **安装 Skills** 页面搜索关键词，在结果卡片上点 **一键安装**。 |
+| 谷神技能来源 | 打开 **浏览技能**，在 `@sulishijian/gusen-skills` 中搜索技能。点卡片上的 **＋**，再点 **导入选中项**。 |
 
 ![安装 Skills 页的本地安装面板，显示文件夹、压缩包和批量导入三个入口](assets/guide/02-local-install.jpg)
 

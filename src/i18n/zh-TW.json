@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Skills Manager"
+    "name": "Gusen Skill Manager"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -17,7 +17,7 @@
   },
   "help": {
     "eyebrow": "操作指南",
-    "title": "快速上手 Skills Manager",
+    "title": "快速上手 Gusen Skill Manager",
     "description": "最快路徑：安裝 Skills → 開啟全域工作區 → 點擊 Preset 標籤啟用。按 ⌘K 可隨時呼出命令面板。按需使用專案工作區、Git 備份和設定。",
     "items": {
       "workflows": {
@@ -30,7 +30,7 @@
       },
       "install": {
         "title": "安裝 Skills",
-        "description": "支援從本機資料夾、Git 倉庫、壓縮檔或市集匯入。支援批次匯入資料夾中的多個 Skill。"
+        "description": "支援從本機資料夾、Git 倉庫、壓縮檔或谷神技能庫匯入。支援批次匯入資料夾中的多個 Skill。"
       },
       "sync": {
         "title": "技能庫",
@@ -38,7 +38,7 @@
       },
       "global": {
         "title": "全域工作區",
-        "description": "每個 Agent 都有自己的頁面，列出其全域目錄裡的所有 Skills（包括不是透過 Skills Manager 安裝的），與 Agent 實際看到的內容保持一致。點 + 新增 Skills 即可從中央庫挑選，並透過內嵌的 Agent 標籤選擇目標；也可透過「全部 Agents」總覽跨所有已安裝 Agent 統一管理。只存在於某個 Agent 目錄的 Skills 可直接在卡片上刪除。"
+        "description": "每個 Agent 都有自己的頁面，列出其全域目錄裡的所有 Skills（包括不是透過 Gusen Skill Manager 安裝的），與 Agent 實際看到的內容保持一致。點 + 新增 Skills 即可從中央庫挑選，並透過內嵌的 Agent 標籤選擇目標；也可透過「全部 Agents」總覽跨所有已安裝 Agent 統一管理。只存在於某個 Agent 目錄的 Skills 可直接在卡片上刪除。"
       },
       "projects": {
         "title": "專案工作區",
@@ -82,7 +82,7 @@
   },
   "agentControl": {
     "title": "讓你的 Agent 管理 Skills",
-    "body": "讓 Claude Code、Codex 等直接替你安裝和部署 Skill，來源與部署狀態仍由 Skills Manager 記錄。",
+    "body": "讓 Claude Code、Codex 等直接替你安裝和部署 Skill，來源與部署狀態仍由 Gusen Skill Manager 記錄。",
     "cta": "去啟用",
     "pickAgents": "讓哪些 Agent 可以這麼做",
     "confirm": "為 {{count}} 個啟用",
@@ -466,7 +466,7 @@
   },
   "install": {
     "title": "安裝 Skills",
-    "browseMarket": "瀏覽排行榜",
+    "browseMarket": "瀏覽技能",
     "localInstall": "本機安裝",
     "gitInstall": "Git 安裝",
     "hot": "熱門",
@@ -644,7 +644,7 @@
     "language": "語言",
     "help": "說明",
     "about": "關於",
-    "version": "Skills Manager {{version}}",
+    "version": "Gusen Skill Manager {{version}}",
     "tagline": "跨平台。極簡、高效、無感多 Preset 切換。",
     "checkUpdate": "查看發行版本",
     "checking": "檢查中…",
@@ -655,7 +655,7 @@
     "restartToApply": "更新已安裝，重新啟動應用即可生效。",
     "restartNow": "立即重新啟動",
     "viewUpdate": "查看",
-    "updateRelocate": "請先把 Skills Manager 移到「應用程式」資料夾，並從那裡啟動，才能在應用內更新。",
+    "updateRelocate": "請先把 Gusen Skill Manager 移到「應用程式」資料夾，並從那裡啟動，才能在應用內更新。",
     "installUpdate": "一鍵更新",
     "confirmAppUpdate": "將從 {{current}} 更新到 {{version}}。安裝完成後應用程式會自動重新啟動。是否繼續？",
     "checkAppUpdate": "檢查更新",
@@ -676,7 +676,7 @@
     "exportLogsHint": "把最近日誌和操作紀錄打包成 zip 儲存到下載資料夾",
     "exportLogsDone": "已匯出日誌（{{count}} 個檔案），請把 zip 拖到 GitHub issue 附件區。",
     "exportLogsFailed": "匯出日誌失敗。",
-    "panicBanner": "上次執行 Skills Manager 時發生崩潰（{{time}}）。",
+    "panicBanner": "上次執行 Gusen Skill Manager 時發生崩潰（{{time}}）。",
     "repoWarning_config_unreadable": "中央庫設定檔已損壞或無法讀取，本次啟動已回退到預設路徑（~/.skills-manager）。如果技能庫看起來是空的，你的資料仍在先前設定的路徑裡——請到「中央倉庫路徑」重新指定。",
     "repoWarning_repo_path_invalid": "設定的中央倉庫路徑無效，本次啟動已回退到預設路徑（~/.skills-manager）。如果技能庫看起來是空的，請到「中央倉庫路徑」重新指定資料所在位置。",
     "repoWarning_migration_incomplete": "將中央庫遷移到新位置的操作沒有完成，本次啟動仍在使用原位置的現有技能庫——資料沒有遺失。要完成遷移，請打開設定，把「中央倉庫路徑」指向一個空的、可寫的資料夾（點「編輯」可查看你選擇的目標位置），然後重新啟動。遷移成功前，目前的技能庫會留在原地——請不要刪除它。",

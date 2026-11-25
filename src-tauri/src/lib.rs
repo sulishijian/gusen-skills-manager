@@ -218,12 +218,12 @@ fn format_status_line(data: &TrayMenuData) -> String {
 fn format_tooltip(data: &TrayMenuData) -> String {
     if data.update_count > 0 {
         format!(
-            "Skills Manager · {} skills · {} agents · {} updates",
+            "Gusen Skill Manager · {} skills · {} agents · {} updates",
             data.total_skills, data.coding_agent_count, data.update_count
         )
     } else {
         format!(
-            "Skills Manager · {} skills · {} agents",
+            "Gusen Skill Manager · {} skills · {} agents",
             data.total_skills, data.coding_agent_count
         )
     }
@@ -283,7 +283,7 @@ fn build_tray_menu_from_data<R: tauri::Runtime>(
 
     let menu = Menu::new(app)?;
 
-    let app_name = MenuItem::with_id(app, "tray-app-name", "Skills Manager", false, None::<&str>)?;
+    let app_name = MenuItem::with_id(app, "tray-app-name", "Gusen Skill Manager", false, None::<&str>)?;
     menu.append(&app_name)?;
 
     let status_line = MenuItem::with_id(
@@ -346,7 +346,7 @@ fn build_tray_menu_from_data<R: tauri::Runtime>(
 
     menu.append(&PredefinedMenuItem::separator(app)?)?;
 
-    let show_item = MenuItem::with_id(app, "show", "Open Skills Manager", true, None::<&str>)?;
+    let show_item = MenuItem::with_id(app, "show", "Open Gusen Skill Manager", true, None::<&str>)?;
     menu.append(&show_item)?;
 
     let check_label = if data.check_updates_running {
@@ -691,7 +691,7 @@ fn ensure_tray_icon(app: &tauri::AppHandle) -> tauri::Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        // Render the original white PNG directly for maximum brightness.
+        // Keep the supplied icon colors in the macOS menu bar.
         builder = builder.icon_as_template(false);
     }
 
@@ -771,6 +771,11 @@ fn teardown_before_exit(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(dev)]
+    if let Some(path) = std::env::var_os("SKILLS_MANAGER_PREVIEW_DIR") {
+        core::central_repo::set_runtime_base_dir_override(Some(path.into()));
+    }
+
     let pre_builder_start = Instant::now();
     let (store, startup_timings) =
         core::app_state::initialize_store().expect("Failed to initialize app state");
