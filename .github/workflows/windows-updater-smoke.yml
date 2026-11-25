@@ -1,0 +1,47 @@
+name: Windows updater test packages
+on:
+  push:
+    branches: [ci/windows-updater-smoke-1441]
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: 1.44.0
+            ref: f01f90a54aa10ff0d940e73d4f5af99b8b68ea61
+          - version: 1.44.1
+            ref: 99a83261cd5240ea7fc9515736f81b07acaa1711
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: 1
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set up Windows compiler inputs
+        shell: pwsh
+        run: |
+          rustup default stable-x86_64-pc-windows-msvc
+          $perl = 'C:\Strawberry\perl\bin\perl.exe'
+          if (Test-Path $perl) { "OPENSSL_SRC_PERL=$perl" >> $env:GITHUB_ENV }
+      - run: npm ci --no-audit --no-fund
+      - name: Build unsigned NSIS installer
+        shell: pwsh
+        run: |
+          '{"bundle":{"createUpdaterArtifacts":false}}' | Set-Content -LiteralPath src-tauri/tauri.ci.json -Encoding ascii
+          npm run tauri -- build --bundles nsis --ci --config src-tauri/tauri.ci.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: skills-manager-${{ matrix.version }}-windows-x64
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          retention-days: 1
