@@ -8,7 +8,6 @@ import {
   Copy,
   Settings2,
   Github,
-  Globe,
   Loader2,
   ExternalLink,
   Sun,
@@ -62,8 +61,7 @@ import { applyTextSize } from "../lib/textScale";
 import { getErrorMessage } from "../lib/error";
 import type { Theme } from "../hooks/useTheme";
 
-const GITHUB_PROFILE_URL = "https://github.com/sulishijian";
-const GITHUB_REPO_URL = `${GITHUB_PROFILE_URL}/skills-manager`;
+const GITHUB_REPO_URL = "https://github.com/sulishijian/skills-manager";
 
 interface SortableAgentCardProps {
   agentKey: string;
@@ -1753,13 +1751,6 @@ export function Settings() {
                   <FileArchive className="w-3 h-3" />
                 )}
                 {t("settings.exportLogs")}
-              </button>
-              <button
-                type="button"
-                onClick={() => { openUrl(GITHUB_PROFILE_URL).catch(() => toast.error(t("common.error"))); }}
-                className={`${actionButtonClass} bg-surface-hover hover:bg-surface-active text-tertiary border-border`}
-              >
-                <Globe className="w-3 h-3" /> {t("settings.website")}
               </button>
               <button
                 type="button"

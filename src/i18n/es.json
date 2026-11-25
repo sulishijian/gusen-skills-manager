@@ -788,8 +788,7 @@
     "updateError": "Error en la actualización automática. Abriendo página de descarga…",
     "updateRelocate": "Mueve Skills Manager a tu carpeta de Aplicaciones y ábrelo desde allí para actualizarlo directamente.",
     "version": "Skills Manager {{version}}",
-    "viewUpdate": "Ver",
-    "website": "Perfil"
+    "viewUpdate": "Ver"
   },
   "closeAction": {
     "title": "Comportamiento al cerrar",
