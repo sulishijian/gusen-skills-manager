@@ -23,7 +23,7 @@ const feed = {
   platforms: {
     "windows-x86_64": {
       signature,
-      url: `https://github.com/sulishijian/skills-manager/releases/download/v${version}/${name}`,
+      url: `https://github.com/sulishijian/gusen-skills-manager/releases/download/v${version}/${name}`,
     },
   },
 };

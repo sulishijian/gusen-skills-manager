@@ -1,0 +1,100 @@
+name: Build macOS release
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CARGO_BUILD_JOBS: 4
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: 0
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: rustup target add ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@401aff9a7a08acb9d27b64936a90db81024cff97
+        with:
+          workspaces: src-tauri -> target
+          key: ${{ matrix.target }}
+      - run: npm ci --no-audit --no-fund
+      - name: Compile app and CLI
+        run: npm run tauri -- build --target ${{ matrix.target }} --no-bundle --ci
+      - name: Verify native executables
+        run: |
+          dir="src-tauri/target/${{ matrix.target }}/release"
+          test -x "$dir/skills-manager"
+          test -x "$dir/skills-manager-cli"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/skills-manager
+            src-tauri/target/${{ matrix.target }}/release/skills-manager-cli
+          if-no-files-found: error
+          retention-days: 2
+
+  package:
+    needs: compile
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: '*-apple-darwin'
+          path: build-inputs
+      - run: npm ci --no-audit --no-fund
+      - name: Bundle universal binaries into a DMG
+        run: |
+          set -euo pipefail
+          target=src-tauri/target/universal-apple-darwin/release
+          mkdir -p "$target"
+          for executable in skills-manager skills-manager-cli; do
+            lipo -create "build-inputs/aarch64-apple-darwin/$executable" "build-inputs/x86_64-apple-darwin/$executable" -output "$target/$executable"
+            chmod 755 "$target/$executable"
+          done
+          printf '%s\n' '{"bundle":{"createUpdaterArtifacts":false,"macOS":{"signingIdentity":"-"}}}' > src-tauri/tauri.mac-build.json
+          npm run tauri -- bundle --target universal-apple-darwin --bundles app,dmg --ci --config src-tauri/tauri.mac-build.json
+      - name: Verify version, architectures, signature and image
+        run: |
+          set -euo pipefail
+          bundle=src-tauri/target/universal-apple-darwin/release/bundle
+          version=${GITHUB_REF_NAME#v}
+          app="$bundle/macos/Gusen Skill Manager.app"
+          plist="$app/Contents/Info.plist"
+          test "$(plutil -extract CFBundleShortVersionString raw "$plist")" = "$version"
+          exe="$(plutil -extract CFBundleExecutable raw "$plist")"
+          lipo "$app/Contents/MacOS/$exe" -verify_arch arm64 x86_64
+          lipo "$app/Contents/MacOS/skills-manager-cli" -verify_arch arm64 x86_64
+          codesign --verify --deep --strict "$app"
+          set -- "$bundle"/dmg/*.dmg
+          test "$#" -eq 1 && test -f "$1"
+          hdiutil verify "$1"
+          mkdir release-artifacts
+          cp "$1" "release-artifacts/Gusen-Skill-Manager_${version}_macOS_universal.dmg"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: macos-universal
+          path: release-artifacts/*.dmg
+          if-no-files-found: error
+          retention-days: 7

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "skills-manager",
-  "version": "1.44.2",
+  "version": "2.0.1",
   "identifier": "com.agentskills.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -33,7 +33,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc1RjYzNUZGQzJDREZEMUYKUldRZi9jM0MvelgyZGVDVGFlaDg5OFNkdHN5VG9ldzBqeDQ3ZnRFVDBLbnA4SE83ZWdLNW1uM0EK",
       "endpoints": [
-        "https://github.com/sulishijian/skills-manager/releases/latest/download/latest.json"
+        "https://github.com/sulishijian/gusen-skills-manager/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "quiet"
