@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Folder,
   FolderOpen,
@@ -47,7 +47,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { check as checkAppUpdate, type Update } from "@tauri-apps/plugin-updater";
+import type { Update } from "@tauri-apps/plugin-updater";
 import { listen } from "@tauri-apps/api/event";
 import { writeText as clipboardWriteText } from "@tauri-apps/plugin-clipboard-manager";
 import { open as dialogOpen, confirm as dialogConfirm } from "@tauri-apps/plugin-dialog";
@@ -56,6 +56,7 @@ import { cn, compactHomePath } from "../utils";
 import { useApp } from "../context/AppContext";
 import { useThemeContext } from "../context/ThemeContext";
 import { AgentIcon } from "../components/AgentIcon";
+import { AppUpdateDialog, type AppUpdateChoice } from "../components/AppUpdateDialog";
 import { ToggleSwitch } from "../components/ToggleSwitch";
 import * as api from "../lib/tauri";
 import { applyTextSize } from "../lib/textScale";
@@ -141,7 +142,7 @@ function AgentGroupDnd({ items, sensors, dragLabel, onDragEnd, renderAgentCard }
 export function Settings() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { tools, refreshTools, openHelp } = useApp();
+  const { tools, refreshTools, openHelp, appUpdateVersion, checkAvailableAppUpdate, skipAppUpdate } = useApp();
   const [togglingTools, setTogglingTools] = useState<Set<string>>(new Set());
   const { theme, setTheme } = useThemeContext();
   const [syncMode, setSyncMode] = useState("symlink");
@@ -162,6 +163,25 @@ export function Settings() {
   const [savingCentralRepoPath, setSavingCentralRepoPath] = useState(false);
   const [appVersion, setAppVersion] = useState("");
   const [appUpdateStatus, setAppUpdateStatus] = useState<string | null>(null);
+  const [appUpdatePrompt, setAppUpdatePrompt] = useState<{ current: string; version: string } | null>(null);
+  const appUpdateViewOpen = useRef(true);
+  const appUpdateChoiceRef = useRef<((choice: AppUpdateChoice) => void) | null>(null);
+
+  useEffect(() => {
+    appUpdateViewOpen.current = true;
+    return () => {
+      appUpdateViewOpen.current = false;
+      appUpdateChoiceRef.current?.("cancel");
+      appUpdateChoiceRef.current = null;
+    };
+  }, []);
+
+  const chooseAppUpdate = (choice: AppUpdateChoice) => {
+    const resolve = appUpdateChoiceRef.current;
+    appUpdateChoiceRef.current = null;
+    setAppUpdatePrompt(null);
+    resolve?.(choice);
+  };
   const [gitRemoteInput, setGitRemoteInput] = useState("");
   const [gitRemoteSaving, setGitRemoteSaving] = useState(false);
   const [gitRemoteDisconnecting, setGitRemoteDisconnecting] = useState(false);
@@ -656,10 +676,27 @@ export function Settings() {
     setAppUpdateStatus(t("settings.checking"));
     let update: Update | null = null;
     try {
-      const proxy = (await api.getSettings("proxy_url")) || undefined;
-      update = await checkAppUpdate({ proxy });
+      const available = await checkAvailableAppUpdate();
+      update = available.update;
+      if (!appUpdateViewOpen.current) return;
       if (!update) {
-        toast.success(t("settings.noUpdate"));
+        if (available.skipped) {
+          toast.info(t("settings.appUpdateAlreadySkipped"));
+        } else {
+          toast.success(t("settings.noUpdate"));
+        }
+        return;
+      }
+
+      const prompt = { current: update.currentVersion, version: update.version };
+      const choice = await new Promise<AppUpdateChoice>((resolve) => {
+        appUpdateChoiceRef.current = resolve;
+        setAppUpdatePrompt(prompt);
+      });
+      if (choice === "cancel") return;
+      if (choice === "skip") {
+        await skipAppUpdate(update.version);
+        toast.success(t("settings.appUpdateSkipped", { version: update.version }));
         return;
       }
 
@@ -1761,7 +1798,15 @@ export function Settings() {
                 className={`${actionButtonClass} bg-surface-hover hover:bg-surface-active text-tertiary border-border`}
               >
                 {appUpdateStatus ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                {appUpdateStatus ?? t(IS_WINDOWS ? "settings.installUpdate" : "settings.checkUpdate")}
+                {appUpdateStatus ?? t(IS_WINDOWS ? "settings.checkAppUpdate" : "settings.checkUpdate")}
+                {appUpdateVersion && (
+                  <span
+                    role="img"
+                    className="h-2 w-2 shrink-0 rounded-full bg-red-500"
+                    title={t("settings.updateAvailable", { version: appUpdateVersion })}
+                    aria-label={t("settings.updateAvailable", { version: appUpdateVersion })}
+                  />
+                )}
               </button>
               <button
                 type="button"
@@ -1810,6 +1855,7 @@ export function Settings() {
           </div>
         </section>
       </div>
+      {appUpdatePrompt && <AppUpdateDialog {...appUpdatePrompt} onChoice={chooseAppUpdate} />}
     </div>
   );
 }

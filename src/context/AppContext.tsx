@@ -1,10 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { check as checkAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import type { ManagedSkill, Project, Preset, ToolInfo } from "../lib/tauri";
 import * as api from "../lib/tauri";
 import i18n from "../i18n";
 import { applyTextSize } from "../lib/textScale";
+import { IS_WINDOWS } from "../lib/platform";
 import { toast } from "sonner";
 
 interface AppState {
@@ -20,6 +22,9 @@ interface AppState {
   appError: string | null;
   helpOpen: boolean;
   detailSkillId: string | null;
+  appUpdateVersion: string | null;
+  checkAvailableAppUpdate: () => Promise<{ update: Update | null; skipped: boolean }>;
+  skipAppUpdate: (version: string) => Promise<void>;
   refreshAppData: () => Promise<void>;
   refreshPresets: () => Promise<void>;
   refreshTools: () => Promise<void>;
@@ -34,6 +39,7 @@ interface AppState {
   closeSkillDetail: () => void;
 }
 
+const SKIPPED_APP_VERSION_KEY = "skipped_app_update_version";
 const VIEWED_PRESET_LS_KEY = "skills-manager.viewedPresetId";
 const LEGACY_VIEWED_PRESET_LS_KEY = "skills-manager.viewedScenarioId";
 
@@ -57,6 +63,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [appError, setAppError] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [detailSkillId, setDetailSkillId] = useState<string | null>(null);
+  const [appUpdateVersion, setAppUpdateVersion] = useState<string | null>(null);
+  const skippedAppVersionRef = useRef<string | null>(null);
   const autoCheckInFlightRef = useRef(false);
   const lastUpdateNotificationRef = useRef<string | null>(null);
   const lastActivePresetIdRef = useRef<string | null>(null);
@@ -278,6 +286,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const checkAvailableAppUpdate = useCallback(async () => {
+    const [proxy, skippedVersion] = await Promise.all([
+      api.getSettings("proxy_url"),
+      api.getSettings(SKIPPED_APP_VERSION_KEY),
+    ]);
+    const update = await checkAppUpdate({ proxy: proxy || undefined, timeout: 15000 });
+    const skipped = update !== null &&
+      (update.version === skippedVersion || update.version === skippedAppVersionRef.current);
+    setAppUpdateVersion(skipped ? null : update?.version ?? null);
+    if (skipped) {
+      await update.close().catch(() => {});
+      return { update: null, skipped: true };
+    }
+    return { update, skipped: false };
+  }, []);
+
+  const skipAppUpdate = useCallback(async (version: string) => {
+    await api.setSettings(SKIPPED_APP_VERSION_KEY, version);
+    skippedAppVersionRef.current = version;
+    setAppUpdateVersion((available) => available === version ? null : available);
+  }, []);
+
+  useEffect(() => {
+    if (!IS_WINDOWS) return;
+    const timer = window.setTimeout(() => {
+      checkAvailableAppUpdate()
+        .then(({ update }) => update?.close())
+        .catch((error) => console.warn("Startup app update check failed", error));
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [checkAvailableAppUpdate]);
+
   // Check skill updates on startup (non-blocking, silent). When the user has
   // opted in via the Settings toggle, also apply any available updates.
   useEffect(() => {
@@ -386,6 +426,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         appError,
         helpOpen,
         detailSkillId,
+        appUpdateVersion,
+        checkAvailableAppUpdate,
+        skipAppUpdate,
         refreshAppData,
         refreshPresets,
         refreshTools,
