@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . && node scripts/check-ui-spec.mjs && node scripts/check-i18n.mjs",
     "preview": "vite preview",
+    "release:feed": "node scripts/create-update-feed.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",

@@ -47,6 +47,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { check as checkAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { listen } from "@tauri-apps/api/event";
 import { writeText as clipboardWriteText } from "@tauri-apps/plugin-clipboard-manager";
 import { open as dialogOpen, confirm as dialogConfirm } from "@tauri-apps/plugin-dialog";
@@ -59,6 +60,7 @@ import { ToggleSwitch } from "../components/ToggleSwitch";
 import * as api from "../lib/tauri";
 import { applyTextSize } from "../lib/textScale";
 import { getErrorMessage } from "../lib/error";
+import { IS_WINDOWS } from "../lib/platform";
 import type { Theme } from "../hooks/useTheme";
 
 const GITHUB_REPO_URL = "https://github.com/sulishijian/skills-manager";
@@ -159,6 +161,7 @@ export function Settings() {
   const [centralRepoPathInput, setCentralRepoPathInput] = useState("");
   const [savingCentralRepoPath, setSavingCentralRepoPath] = useState(false);
   const [appVersion, setAppVersion] = useState("");
+  const [appUpdateStatus, setAppUpdateStatus] = useState<string | null>(null);
   const [gitRemoteInput, setGitRemoteInput] = useState("");
   const [gitRemoteSaving, setGitRemoteSaving] = useState(false);
   const [gitRemoteDisconnecting, setGitRemoteDisconnecting] = useState(false);
@@ -640,6 +643,46 @@ export function Settings() {
       toast.error(t("common.error"));
     } finally {
       setReportingIssue(false);
+    }
+  };
+
+  const handleAppUpdate = async () => {
+    if (!IS_WINDOWS) {
+      await openUrl(`${GITHUB_REPO_URL}/releases`).catch(() => toast.error(t("common.error")));
+      return;
+    }
+    if (appUpdateStatus) return;
+
+    setAppUpdateStatus(t("settings.checking"));
+    let update: Update | null = null;
+    try {
+      const proxy = (await api.getSettings("proxy_url")) || undefined;
+      update = await checkAppUpdate({ proxy });
+      if (!update) {
+        toast.success(t("settings.noUpdate"));
+        return;
+      }
+
+      let received = 0;
+      let total: number | undefined;
+      setAppUpdateStatus(t("settings.downloadingAppUpdate", { version: update.version }));
+      await update.downloadAndInstall((event) => {
+        if (event.event === "Started") total = event.data.contentLength;
+        if (event.event === "Progress") {
+          received += event.data.chunkLength;
+          if (total) {
+            setAppUpdateStatus(t("settings.appUpdateProgress", { percent: Math.min(100, Math.floor(received / total * 100)) }));
+          }
+        }
+        if (event.event === "Finished") setAppUpdateStatus(t("settings.verifyingAppUpdate"));
+      });
+      // The Windows updater hands off to NSIS, which installs and relaunches.
+    } catch (error) {
+      console.error("Application update failed", error);
+      toast.error(t("settings.updateError"), { description: getErrorMessage(error, t("common.error")) });
+    } finally {
+      await update?.close().catch(() => {});
+      setAppUpdateStatus(null);
     }
   };
 
@@ -1712,10 +1755,13 @@ export function Settings() {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => { openUrl(`${GITHUB_REPO_URL}/releases`).catch(() => toast.error(t("common.error"))); }}
+                onClick={handleAppUpdate}
+                disabled={appUpdateStatus !== null}
+                aria-live="polite"
                 className={`${actionButtonClass} bg-surface-hover hover:bg-surface-active text-tertiary border-border`}
               >
-                <RefreshCw className="w-3 h-3" /> {t("settings.checkUpdate")}
+                {appUpdateStatus ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                {appUpdateStatus ?? t(IS_WINDOWS ? "settings.installUpdate" : "settings.checkUpdate")}
               </button>
               <button
                 type="button"
