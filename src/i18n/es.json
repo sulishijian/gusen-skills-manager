@@ -588,7 +588,7 @@
       "title": "Actualización automática de skills"
     },
     "changeDir": "Cambiar directorio",
-    "checkUpdate": "Buscar actualizaciones",
+    "checkUpdate": "Ver versiones",
     "checking": "Buscando…",
     "closeAction": "Comportamiento al cerrar",
     "closeAction_ask": "Preguntar cada vez",
@@ -789,7 +789,7 @@
     "updateRelocate": "Mueve Skills Manager a tu carpeta de Aplicaciones y ábrelo desde allí para actualizarlo directamente.",
     "version": "Skills Manager {{version}}",
     "viewUpdate": "Ver",
-    "website": "Sitio web"
+    "website": "Perfil"
   },
   "closeAction": {
     "title": "Comportamiento al cerrar",
